@@ -1,15 +1,12 @@
-# Приложение «Данные по персоналу»
+# Приложение «Каталог товаров»
 
-На основании всего пройденного материала необходимо написать приложение для вывода информации о персонале предприятия.
-
-
-Для реализации программы необходимо написать класс Person со свойствами имени и зарплаты. Для каждого человека номер телефона создается рандомно.
+Необходимо написать приложение на основе пройденного материала, содержащее в себе каталог товаров (товары могут быть выбраны на свой выбор). Приложение содержит два списка: `LazyColumn` и `LazyRow`. В каждом списке содержатся товары. Перед каждым списком имеется заголовок. Ячейка списка содержит `картинку`, `название` и `цену`.
 
 ## Демонстрация
 
-[//]: # (<img src="demonstarions/demo.gif" width="385"  alt="demo"/>)
+<img src="demonstarions/demo.gif" width="385"  alt="demo"/>
 
-<img src="demonstarions/1.png" alt="Описание изображения" width="200" />
+[//]: # (<img src="demonstarions/1.png" alt="Описание изображения" width="200" />)
 
 
 ## Установка
@@ -20,5 +17,5 @@
 1. Клонируйте репозиторий:
 
 ```bash
-git clone --branch=Column-Row-Box-Surface https://github.com/PawPrintsInTheDark/FirstAppJetpackCompose.git
+git clone --branch=LazyColumn-LazyRow https://github.com/PawPrintsInTheDark/FirstAppJetpackCompose.git
 
