@@ -4,65 +4,100 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalLayoutApi::class)
+    @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val employees = listOf(
-            Employee("Иван", "Иванов", "Инженер", 50000.0),
-            Employee("Петр", "Петров", "Врач", 70000.0),
-            Employee("Сергей", "Сергеев", "Программист", 60000.0),
-            Employee("Алексей", "Алексеев", "Учитель", 40000.0),
-            Employee("Анна", "Антонова", "Инженер", 52000.0),
-            Employee("Мария", "Маркова", "Врач", 72000.0),
-            Employee("Дмитрий", "Дмитриев", "Программист", 65000.0),
-            Employee("Елена", "Еленина", "Учитель", 45000.0),
-            Employee("Олег", "Олегов", "Инженер", 55000.0),
-            Employee("Татьяна", "Татьянова", "Врач", 75000.0),
-            Employee("Андрей", "Андреев", "Программист", 68000.0),
-            Employee("Светлана", "Светланова", "Учитель", 48000.0)
+            Employee("Иван", "Инженер"), Employee("Петр", "Врач"),
+            Employee("Сергей", "Программист"), Employee("Алексей", "Учитель"),
+            Employee("Анна", "Инженер"), Employee("Мария", "Врач"),
+            Employee("Дмитрий", "Программист"), Employee("Елена", "Учитель"),
+            Employee("Олег", "Инженер"), Employee("Татьяна", "Врач"),
+            Employee("Андрей", "Программист"), Employee("Светлана", "Учитель"),
+            Employee("Максим", "Инженер"), Employee("Ксения", "Врач"),
+            Employee("Анастасия", "Программист"), Employee("Игорь", "Учитель"),
+            Employee("Виктор", "Инженер"), Employee("Наталья", "Врач"),
+            Employee("Роман", "Программист"), Employee("Екатерина", "Учитель"),
+            Employee("Юлия", "Инженер"), Employee("Станислав", "Врач"),
+            Employee("Александр", "Программист"), Employee("Ольга", "Учитель"),
+            Employee("Денис", "Инженер"), Employee("Марина", "Врач"),
+            Employee("Владимир", "Программист"), Employee("Тимур", "Учитель"),
+            Employee("Людмила", "Инженер")
         )
+
+
         val sortedEmployees = employees.shuffled()
+        val groups = sortedEmployees.groupBy { it.position }
 
         setContent {
-            FlowColumn(
-                Modifier
-                    .fillMaxSize()
-                    .horizontalScroll(rememberScrollState()),
+            val listState = rememberLazyListState()
+            val coroutineScope = rememberCoroutineScope()
+
+            LazyColumn(
+                state = listState,
+                contentPadding = PaddingValues(6.dp)
             ) {
-                sortedEmployees.forEach { employee ->
-                    Box(
-                        Modifier
-                            .wrapContentSize()
+                item {
+                    Text(
+                        text = "В конец", Modifier
+                            .padding(8.dp)
+                            .background(Color.DarkGray)
                             .padding(6.dp)
-                            .border(2.dp, Color.DarkGray)
-                            .background(Color.Gray)
-                    ) {
-                        EmployeeCard(employee = employee)
+                            .clickable {
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(employees.size-1)
+                                }
+                            }, fontSize = 28.sp, color = Color.White
+                    )
+                }
+                groups.forEach { (type, name) ->
+                    stickyHeader {
+                        Text(
+                            text = type,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier
+                                .background(Color.Magenta)
+                                .padding(6.dp)
+                                .fillParentMaxWidth()
+                        )
                     }
+                    items(name) { emploee ->
+                        Text(text = emploee.firstName, Modifier.padding(6.dp), fontSize = 32.sp)
+                    }
+                }
+                item {
+                    Text(
+                        text = "В начало", Modifier
+                            .padding(8.dp)
+                            .background(Color.DarkGray)
+                            .padding(6.dp)
+                            .clickable {
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(0)
+                                }
+                            }, fontSize = 28.sp, color = Color.White
+                    )
                 }
             }
         }
@@ -70,21 +105,5 @@ class MainActivity : ComponentActivity() {
 }
 
 data class Employee(
-    val firstName: String, val lastName: String, val position: String, val salary: Double
+    val firstName: String, val position: String
 )
-
-
-@Composable
-fun EmployeeCard(employee: Employee) {
-    Column(
-        modifier = Modifier
-            .width(400.dp)
-    ) {
-        Image(painterResource(id = R.drawable.ic_android), "",
-            modifier = Modifier.padding(10.dp).size(100.dp))
-        Text(text = "Имя: ${employee.firstName}", fontSize = 22.sp )
-        Text(text = "Фамилия: ${employee.lastName}", fontSize = 22.sp)
-        Text(text = "Должность: ${employee.position}", fontSize = 22.sp)
-        Text(text = "Зарплата: ${employee.salary} руб.", fontSize = 22.sp)
-    }
-}
