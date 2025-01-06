@@ -1,54 +1,80 @@
 package com.example.firstappjetpackcompose
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withLink
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            TextWithLinks()
+            RandomButtonsGame()
         }
     }
+}
 
-    @Preview(showSystemUi = true)
-    @Composable
-    fun TextWithLinks() {
-        val context = LocalContext.current
-        val linkStyle = SpanStyle(Color.Magenta, textDecoration = TextDecoration.Underline)
-        val annotationString = buildAnnotatedString {
-            withLink(link = LinkAnnotation.Clickable(tag = "", linkInteractionListener = {
-                context.startActivity(
-                    Intent(
-                        context,
-                        SecondActivity::class.java
-                    )
-                )
-            }, styles = TextLinkStyles(linkStyle))) {
-                append("Urban")
+@Composable
+fun RandomButtonsGame() {
+    // Определенные цвета
+    val colors = listOf(Color.Red, Color.Green, Color.Blue)
+    var buttonStates by rememberSaveable { mutableStateOf(List(3) { ButtonState(colors) }) }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        buttonStates.forEachIndexed { index, state ->
+            Button(
+                onClick = {
+                    buttonStates = buttonStates.mapIndexed { i, s ->
+                        if (i == index) s else s.randomize(colors)
+                    }
+                },
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                border = BorderStroke(state.borderThickness.dp, state.borderColor),
+                colors = ButtonDefaults.buttonColors(containerColor = state.backgroundColor)
+            ) {
+                Text("Кнопка ${index + 1}")
             }
-            append(" University")
         }
-        Text(text = annotationString, fontSize = 28.sp, modifier = Modifier.padding(20.dp))
-    }
 
+        if (buttonStates.distinct().size == 1) {
+            Text("Победа!", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.padding(16.dp))
+        }
+    }
+}
+
+data class ButtonState(
+    var backgroundColor: Color,
+    var borderColor: Color,
+    var borderThickness: Int
+) {
+    constructor(colors: List<Color>) : this(
+        backgroundColor = colors[Random.nextInt(colors.size)],
+        borderColor = colors[Random.nextInt(colors.size)],
+            borderThickness = Random.nextInt(4, 12)
+    )
+
+    fun randomize(colors: List<Color>): ButtonState {
+        return ButtonState(
+            backgroundColor = colors[Random.nextInt(colors.size)],
+            borderColor = colors[Random.nextInt(colors.size)],
+            borderThickness = Random.nextInt(4, 12)
+        )
+    }
 }
