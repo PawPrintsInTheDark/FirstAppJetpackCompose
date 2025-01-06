@@ -9,13 +9,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -23,11 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.pow
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,113 +40,87 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            BodyMassIndexCalculator()
+            DynamicList()
         }
 
 
     }
 }
 
+@Preview(showSystemUi = true)
 @SuppressLint("DefaultLocale")
 @Composable
-fun BodyMassIndexCalculator() {
-    var weight by rememberSaveable { mutableIntStateOf(0) }
-    var height by rememberSaveable { mutableIntStateOf(0) }
-    val bmi by remember {
-        derivedStateOf {
-            if (height != 0) weight / ((height / 100.0).pow(2)) else 0.0
-        }
-    }
-    val interpretation by remember {
-        derivedStateOf {
-            if (height > 0) {
-                when {
-                    bmi < 16.0 -> "Выраженный дефицит массы тела"
-                    bmi in 16.0..18.49 -> "Недостаточная масса тела"
-                    bmi in 18.5..24.9 -> "Нормальная  масса тела"
-                    bmi in 25.0..29.9 -> "Избыточная масса тела (предожирение)"
-                    bmi in 30.0..34.9 -> "Ожирение 1-ой степени"
-                    bmi in 35.0..39.9 -> "Ожирение 2-ой степени"
-                    bmi < 40.0 -> "Ожирение 3-й степени"
-                    else -> "Бабушка откормила"
-                }
-            } else {
-                "Недостаточно данных!"
-            }
-        }
-    }
+fun DynamicList() {
+    var item by rememberSaveable {mutableStateOf("") }
+    val itemList = remember { mutableStateListOf("Москва", "Токио", "Берлин") }
+
 
     Column(
         modifier = Modifier
-            .padding(20.dp)
-            .fillMaxWidth()
-            .clip(shape = RoundedCornerShape(10.dp))
-            .background(Color.LightGray),
+            .fillMaxWidth() ,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = "Калькулятор ИМТ",
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            color = Color.White,
-            textAlign = TextAlign.Center,
+        Column(
             modifier = Modifier
+                .padding(20.dp)
                 .fillMaxWidth()
-                .background(Color.DarkGray)
-                .padding(12.dp)
+                .background(Color.LightGray),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Динамический список",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+                    .background(Color.DarkGray)
+                    .padding(12.dp)
 
-        )
-        Text(
-            text = "Рост:",
-            fontSize = 16.sp,
-            modifier = Modifier
-                .clickable { height += 5 }
-                .padding(top = 8.dp)
-        )
-        Text(
-            text = "$height см",
-            fontSize = 16.sp,
-            modifier = Modifier
+            )
+            LazyColumn(
+                Modifier
+                    .background(Color.LightGray)
+                    .height(130.dp)
+                    .padding(10.dp),
+            ) {
+                items(itemList) { item ->
+                    Text(
+                        text = item,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .fillMaxWidth()
+                            .background(Color.White, shape = RoundedCornerShape(20.dp))
+                            .padding(2.dp)
+                            .clickable {
+                                itemList.remove(item)
+                            }
 
-                .clickable { height += 5 }
-                .padding(bottom = 4.dp)
-        )
-        Text(
-            text = "Вес:",
-            fontSize = 16.sp,
-            modifier = Modifier
-                .clickable { weight += 5 }
-                .padding(top = 8.dp)
-        )
-        Text(
-            text = "$weight кг",
-            fontSize = 16.sp,
-            modifier = Modifier
-                .clickable { weight += 5 }
-                .padding(bottom = 12.dp)
-        )
-        Text(text = "Коэффицент ИМТ:", fontSize = 16.sp)
-        Text(
-            text = String.format("%.0f", bmi),
-            fontSize = 16.sp,
-            modifier = Modifier.padding(bottom = 10.dp)
-        )
+                    )
+                }
+            }
+        }
+        OutlinedTextField(
+            value = item,
+            placeholder = { Text(text = "Введите текст", fontSize = 16.sp)},
+            textStyle = TextStyle(fontSize = 18.sp),
+            onValueChange = { item = it })
 
         Text(
-            text = interpretation,
-            fontSize = 16.sp,
-            modifier = Modifier
-                .background(Color.White, shape = RoundedCornerShape(10.dp))
-                .padding(5.dp)
-        )
-        Text(
-            text = "Сбросить",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
+            text = "Добавить",
+            fontWeight = FontWeight.W900,
+            fontSize = 24.sp,
             modifier = Modifier
                 .clickable {
-                    weight = 0
-                    height = 0
+                    if (item.isNotBlank()) {
+                        itemList.add(item)
+                        item = ""
+                    }
                 }
                 .padding(12.dp)
         )
