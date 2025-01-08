@@ -1,210 +1,158 @@
 package com.example.firstappjetpackcompose
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import java.io.Serializable
+
+data class Note(
+    val title: String,
+    val content: String
+):Serializable
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            PhoneBookApp() { finish() }
-        }
-    }
-}
+            var notes by rememberSaveable { mutableStateOf(listOf(Note("Добро пожаловать!", "Напишите свою первую заметку!"))) }
 
-@SuppressLint("MutableCollectionMutableState")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PhoneBookApp(onClose: () -> Unit) {
-    var textContent by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue()
-        )
-    }
-    val context = LocalContext.current
-    var contacts by rememberSaveable { mutableStateOf(listOf<String>()) }
-    var selectedContact by remember { mutableStateOf<String?>(null) }
+            var showAddNoteScreen by rememberSaveable { mutableStateOf(false) }
+            val snackbarHostState = remember { SnackbarHostState() }
+            val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Телефонная книга") },
-                colors = topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.Menu, tint = Color.White, contentDescription = "Menu")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        selectedContact?.let {
-                            showToast(
-                                "Звонок совершен: $it",
-                                context
-                            )
+            if (showAddNoteScreen) {
+                var title by rememberSaveable { mutableStateOf("") }
+                var content by rememberSaveable { mutableStateOf("") }
+
+                Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(text = "Напишите что-нибудь:", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            value = title,
+                            onValueChange = { title = it },
+                            label = { Text("Заголовок") }
+                        )
+                        OutlinedTextField(
+                            value = content,
+                            onValueChange = { content = it },
+                            label = { Text("Основное содержимое") }
+                        )
+                        Button(onClick = {
+                            if (title.isEmpty() || content.isEmpty()) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Введите текст!",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            } else {
+                                notes += Note(title, content)
+                                showAddNoteScreen = false
+                            }
+                        }) {
+                            Text("Сохранить")
                         }
-                    }) {
-                        Icon(Icons.Default.Call, tint = Color.White, contentDescription = "Call")
-                    }
-                    IconButton(onClick = { onClose() }) {
-                        Icon(Icons.Default.Close, tint = Color.White, contentDescription = "Close")
                     }
                 }
-            )
-        },
-        bottomBar = {
-            BottomAppBar(
-                actions = {
-                    IconButton(onClick = {
-                        selectedContact?.let {
-                            showToast(
-                                "Сообщение отправлено: $it",
-                                context
-                            )
+            } else {
+                Scaffold(
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
+                    floatingActionButton = {
+                        FloatingActionButton(onClick = { showAddNoteScreen = true }) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Note")
                         }
-                    }) {
-                        Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Send")
                     }
-                    Spacer(Modifier.weight(1f, true))
-                    IconButton(onClick = {
-                        selectedContact?.let {
-                            showToast(
-                                "Контакт отредактирован: $it",
-                                context
-                            )
-                        }
-                    }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    var selectedNote by rememberSaveable { mutableStateOf(notes[0]) }
+                    val drawerState = rememberDrawerState(DrawerValue.Closed)
 
-                )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                if (textContent.text.isNotBlank()) {
-                    contacts += textContent.text
-                    textContent = TextFieldValue()
-                }
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(10.dp)
-        ) {
-            OutlinedTextField(
-                value = textContent,
-                onValueChange = { textContent = it },
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(fontSize = 18.sp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            LazyColumn(
-                Modifier
-                    .background(MaterialTheme.colorScheme.inverseOnSurface, RoundedCornerShape(10.dp))
-                    .fillMaxSize()) {
-                items(contacts) { contact ->
-                    ContactItem(contact, onClick = {
-                        selectedContact = contact
-                    }, onDelete = {
-                        contacts = contacts.filter { it != contact }
-                        })
+                    ModalNavigationDrawer(
+                        drawerState = drawerState,
+                        drawerContent = {
+                            ModalDrawerSheet {
+                                notes.forEach { note ->
+                                    NavigationDrawerItem(
+                                        label = { Text(note.title, fontSize = 20.sp) },
+                                        selected = selectedNote == note,
+                                        icon = {
+                                            IconButton(onClick = {
+                                                if (notes.size > 1) {
+                                                    selectedNote = if (selectedNote == note) notes[notes.indexOf(selectedNote) - 1] else selectedNote
+                                                    notes = notes.filter { it != note }
+                                                } else {
+                                                    scope.launch { snackbarHostState.showSnackbar("Добавьте хотя бы одну заметку") }
+                                                }
+                                            }) {
+                                                Icon(
+                                                    Icons.Default.Delete,
+                                                    contentDescription = "Удалить заметку"
+                                                )
+                                            }
+                                        },
+                                        onClick = { selectedNote = note },
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .fillMaxWidth()
+                        ) {
+                            IconButton(
+                                modifier = Modifier.align(Alignment.Start),
+                                onClick = { scope.launch { drawerState.open() } },
+                                content = { Icon(Icons.Filled.Menu, contentDescription = "Меню") }
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(selectedNote.title, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Text(selectedNote.content, fontSize = 22.sp)
+                        }
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-fun ContactItem(contact: String, onClick: () -> Unit, onDelete: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable(onClick = onClick)
-            .background(Color.White, CircleShape),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(contact, modifier = Modifier.weight(1f).padding(start = 4.dp), fontWeight = FontWeight.W400, fontSize = 18.sp)
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete")
-        }
-    }
-}
-
-fun showToast(message: String, context: Context) {
-    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    PhoneBookApp() { }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ContactPreview() {
-    ContactItem("hello guys!",{}) { }
 }
