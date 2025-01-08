@@ -2,157 +2,105 @@ package com.example.firstappjetpackcompose
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.*
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
-import java.io.Serializable
-
-data class Note(
-    val title: String,
-    val content: String
-):Serializable
 
 class MainActivity : ComponentActivity() {
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var notes by rememberSaveable { mutableStateOf(listOf(Note("Добро пожаловать!", "Напишите свою первую заметку!"))) }
-
-            var showAddNoteScreen by rememberSaveable { mutableStateOf(false) }
-            val snackbarHostState = remember { SnackbarHostState() }
-            val scope = rememberCoroutineScope()
-
-            if (showAddNoteScreen) {
-                var title by rememberSaveable { mutableStateOf("") }
-                var content by rememberSaveable { mutableStateOf("") }
-
-                Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        Text(text = "Напишите что-нибудь:", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedTextField(
-                            value = title,
-                            onValueChange = { title = it },
-                            label = { Text("Заголовок") }
-                        )
-                        OutlinedTextField(
-                            value = content,
-                            onValueChange = { content = it },
-                            label = { Text("Основное содержимое") }
-                        )
-                        Button(onClick = {
-                            if (title.isEmpty() || content.isEmpty()) {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        "Введите текст!",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
-                            } else {
-                                notes += Note(title, content)
-                                showAddNoteScreen = false
-                            }
-                        }) {
-                            Text("Сохранить")
-                        }
-                    }
-                }
-            } else {
-                Scaffold(
-                    snackbarHost = { SnackbarHost(snackbarHostState) },
-                    floatingActionButton = {
-                        FloatingActionButton(onClick = { showAddNoteScreen = true }) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Note")
-                        }
-                    }
-                ) {
-                    var selectedNote by rememberSaveable { mutableStateOf(notes[0]) }
-                    val drawerState = rememberDrawerState(DrawerValue.Closed)
-
-                    ModalNavigationDrawer(
-                        drawerState = drawerState,
-                        drawerContent = {
-                            ModalDrawerSheet {
-                                notes.forEach { note ->
-                                    NavigationDrawerItem(
-                                        label = { Text(note.title, fontSize = 20.sp) },
-                                        selected = selectedNote == note,
-                                        icon = {
-                                            IconButton(onClick = {
-                                                if (notes.size > 1) {
-                                                    selectedNote = if (selectedNote == note) notes[notes.indexOf(selectedNote) - 1] else selectedNote
-                                                    notes = notes.filter { it != note }
-                                                } else {
-                                                    scope.launch { snackbarHostState.showSnackbar("Добавьте хотя бы одну заметку") }
-                                                }
-                                            }) {
-                                                Icon(
-                                                    Icons.Default.Delete,
-                                                    contentDescription = "Удалить заметку"
-                                                )
-                                            }
-                                        },
-                                        onClick = { selectedNote = note },
-                                    )
-                                }
-                            }
-                        }
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .verticalScroll(rememberScrollState())
-                                .fillMaxWidth()
-                        ) {
-                            IconButton(
-                                modifier = Modifier.align(Alignment.Start),
-                                onClick = { scope.launch { drawerState.open() } },
-                                content = { Icon(Icons.Filled.Menu, contentDescription = "Меню") }
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(selectedNote.title, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(5.dp))
-                            Text(selectedNote.content, fontSize = 22.sp)
-                        }
-                    }
-                }
-            }
+            DataLoaderApp()
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun DataLoaderApp() {
+    val context = LocalContext.current
+    var isSwitchOn by rememberSaveable { mutableStateOf(false) }
+    var dataLoaded by rememberSaveable { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF280C28),
+                    titleContentColor = Color.White
+
+                ),
+                title = { Text("Загрузка данных") },
+                actions = {
+                }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Button(
+                colors = ButtonDefaults.buttonColors(Color(0xFF280C28)),
+                onClick = {
+                    if (isSwitchOn) {
+                        Toast.makeText(context, "Данные загружены", Toast.LENGTH_SHORT).show()
+                        dataLoaded = "На краю утеса, обрывающегося в бурное море, стоял старый маяк. Его белоснежные стены были покрыты трещинами, а краска местами облупилась, но он все еще гордо поднимался над волнами, как страж, охраняющий берег. Местные жители говорили, что маяк хранит в себе множество тайн, и многие из них были связаны с его последним смотрителем, старым капитаном Эдвардом."
+                    } else {
+                        Toast.makeText(context, "Нет доступа", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                enabled = true,
+            ) {
+                Text("Загрузка данных")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Switch(
+                checked = isSwitchOn,
+                onCheckedChange = { isSwitchOn = it }
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(it)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = dataLoaded,
+                modifier = Modifier.align(Alignment.TopStart)
+            )
+        }
+
     }
 }
