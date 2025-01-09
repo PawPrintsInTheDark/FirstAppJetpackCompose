@@ -1,31 +1,33 @@
 package com.example.firstappjetpackcompose
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,198 +37,226 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import java.io.Serializable
-
-data class Note(
-    val id: Int,
-    val content: String
-): Serializable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NotesApp()
+            AppConstructorMan()
         }
     }
 }
 
+@Preview(showSystemUi = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotesApp() {
-    var openDialog by rememberSaveable { mutableStateOf(false) }
-    var notes by rememberSaveable { mutableStateOf(listOf<Note>()) }
-    var noteContent by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue()
-        )
-    }
-    var noteToDelete by rememberSaveable { mutableStateOf<Note?>(null) }
-    val context = LocalContext.current
+private fun AppConstructorMan() {
+    val hairStyles = listOf("Причёска 1", "Причёска 2", "Причёска 3","Причёска 4")
+    val eyebrows = listOf("Брови 1", "Брови 2")
+    val noses = listOf("нос 1", "нос 2")
 
-    if (openDialog) {
-        DialogWithImage(
-            onDismissRequest = { openDialog = false; noteToDelete = null },
-            onConfirmation = {
-                notes = notes.filter { it.id != noteToDelete!!.id }
-                openDialog = false
-                Toast.makeText(context, "Элемент удалён", Toast.LENGTH_SHORT).show()
-                noteToDelete = null
-            },
-            painter = Icons.Default.Delete,
-        )
-    }
+    var selectedHairstyle by rememberSaveable { mutableStateOf(hairStyles[0]) }
+    var selectedNose by rememberSaveable { mutableStateOf(noses[0]) }
+    var selectedEyebrow by rememberSaveable { mutableStateOf(eyebrows[0]) }
+    var expandedMenu by rememberSaveable { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .padding(10.dp)
-            .fillMaxSize()
-            .clip(RoundedCornerShape(5.dp))
-    ) {
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                textAlign = TextAlign.Center,
-                text = "Заметки",
-                fontSize = 28.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.DarkGray, RoundedCornerShape(2.dp))
-                    .padding(10.dp),
-                color = Color.White,
-            )
-            TextField(
-                value = noteContent,
-                onValueChange = { noteContent = it },
-                label = { Text("Содержимое заметки", fontSize = 20.sp) },
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(fontSize = 18.sp)
-            )
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.LightGray, RoundedCornerShape(3.dp))
-            ) {
-                items(notes) { note ->
-                    NoteItem(note) {
-                        noteToDelete = note
-                        openDialog = true
-                    }
-                }
-            }
-        }
-        FloatingActionButton(
-            containerColor = Color.DarkGray,
-            onClick = {
-                if (noteContent.text.isNotBlank()) {
-                    val newNote = Note(
-                        id = notes.size + 1,
-                        content = noteContent.text
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    titleContentColor = Color.White,
+                    containerColor = Color.DarkGray
+                ),
+                title = {
+                    Text(
+                        "Конструктор персонажа",
+                        fontSize = 23.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(10.dp)
                     )
-                    notes += newNote
-                    noteContent = TextFieldValue()
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(10.dp)
-        ) {
-            Text("+")
-        }
-    }
-}
-
-@Composable
-fun DialogWithImage(
-    onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit,
-    painter: ImageVector,
-) {
-    Dialog(onDismissRequest = onDismissRequest) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(375.dp)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter, contentDescription = "",
-                    modifier = Modifier.height(160.dp).fillMaxSize(),
-                    tint = Color(0xFFD23A62)
-                )
-                Text(text = "Потвердите удаление элемента", Modifier.padding(16.dp))
-                Row(
-                    Modifier.fillMaxWidth(),
-                    Arrangement.Center
-                ) {
-                    TextButton(onClick = {onDismissRequest()},
-                        modifier = Modifier.padding(8.dp)) {
-                        Text(text = "Отмена")
+                },
+                actions = {
+                    IconButton(onClick = { expandedMenu = !expandedMenu }) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
                     }
-                    TextButton(onClick = {onConfirmation()},
-                        modifier = Modifier.padding(8.dp)) {
-                        Text(text = "Удалить")
+                    DropdownMenu(
+                        expanded = expandedMenu,
+                        onDismissRequest = { expandedMenu = false }
+                    ) {
+                        DropdownMenuItem(onClick = {
+                            resetSelections(hairStyles, noses, eyebrows,
+                                { selectedHairstyle = it },
+                                { selectedNose = it },
+                                { selectedEyebrow = it })
+                        }, text = { Text("Сброс") })
+                        HorizontalDivider()
+                        DropdownMenuItem(onClick = {
+                            randomizeSelections(hairStyles, noses, eyebrows,
+                                { selectedHairstyle = it },
+                                { selectedNose = it },
+                                { selectedEyebrow = it })
+                        }, text = { Text("Случайный образ") })
                     }
                 }
-            }
+            )
         }
-
-    }
-
-
-}
-
-@Composable
-fun NoteItem(note: Note, onDelete: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        elevation = CardDefaults.elevatedCardElevation(4.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(it)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text = note.content, fontSize = 18.sp)
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Удалить заметку",
-                    tint = Color.DarkGray
+            Box(modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .size(300.dp)) {
+                Image(
+                    painter = painterResource(id = getHairImageResource(selectedHairstyle)),
+                    contentDescription = "Hairstyle",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(id = getEyebrowImageResource(selectedEyebrow)),
+                    contentDescription = "Eyebrows",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(R.drawable.eye1),
+                    contentDescription = "Eyes",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(id = getNoseImageResource(selectedNose)),
+                    contentDescription = "Nose",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Image(
+                    painter = painterResource(R.drawable.lips1),
+                    contentDescription = "Lips",
+                    modifier = Modifier.fillMaxSize()
                 )
             }
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text("Причёска:", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            DropdownMenuWithLabel(selectedHairstyle, hairStyles) {
+                selectedHairstyle = it
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text("Нос:", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            DropdownMenuWithLabel(selectedNose, noses) {
+                selectedNose = it
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text("Брови:", fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            DropdownMenuWithLabel( selectedEyebrow, eyebrows) {
+                selectedEyebrow = it
+            }
+
         }
     }
 }
 
-@Preview(showBackground = true)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotePreview() {
-    NoteItem(Note(1, "hello")) {}
+fun DropdownMenuWithLabel(
+    selectedValue: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+    ) {
+        TextField(
+            value = selectedValue,
+            onValueChange = {},
+            readOnly = true,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable)
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    NotesApp()
+fun resetSelections(
+    hairstyles: List<String>,
+    noses: List<String>,
+    eyebrows: List<String>,
+    selectedHairstyle: (String) -> Unit,
+    selectedNose: (String) -> Unit,
+    selectedEyebrow: (String) -> Unit,
+) {
+    selectedHairstyle(hairstyles[0])
+    selectedNose(noses[0])
+    selectedEyebrow(eyebrows[0])
+}
+
+fun randomizeSelections(
+    hairstyles: List<String>,
+    noses: List<String>,
+    eyebrows: List<String>,
+    selectedHairstyle: (String) -> Unit,
+    selectedNose: (String) -> Unit,
+    selectedEyebrow: (String) -> Unit,
+) {
+    selectedHairstyle(hairstyles.random())
+    selectedNose(noses.random())
+    selectedEyebrow(eyebrows.random())
+}
+
+
+fun getHairImageResource(hairstyle: String): Int {
+    return when (hairstyle) {
+        "Причёска 1" -> R.drawable.hairstyle1
+        "Причёска 2" -> R.drawable.hairstyle2
+        "Причёска 3" -> R.drawable.hairstyle3
+        "Причёска 4" -> R.drawable.hairstyle4
+
+        else -> R.drawable.hairstyle1
+    }
+}
+
+fun getEyebrowImageResource(eyebrow: String): Int {
+    return when (eyebrow) {
+        "Брови 1" -> R.drawable.brows1
+        "Брови 2" -> R.drawable.brows2
+        else -> R.drawable.brows1
+    }
+}
+
+
+fun getNoseImageResource(nose: String): Int {
+    return when (nose) {
+        "нос 1" -> R.drawable.nose1
+        "нос 2" -> R.drawable.nose2
+        else -> R.drawable.nose1
+    }
 }
